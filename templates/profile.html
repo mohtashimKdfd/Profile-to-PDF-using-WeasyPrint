@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+</head>
+<body>
+    
+    <h1> Username: {{  user.username }}</h1>  
+    <h1> EMail: {{ user.email }}</h1>
+    {% if user.bio %}
+        <h1> Bio : {{ user.bio }} </h1>
+    {% endif %}
+    {% if user.address %}
+        <h1> Address : {{ user.address }}</h1>
+    {% endif %}
+    {% if user.hobby %}
+        <h1> Hobby :{{ user.hobby }}</h1>
+    {% endif %}
+</body>
+</html>
