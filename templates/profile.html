@@ -4,20 +4,24 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+
     <title>Profile</title>
 </head>
 <body>
     
-    <h1> Username: {{  user.username }}</h1>  
-    <h1> EMail: {{ user.email }}</h1>
+    <img src="{{ user.image }}" alt="" srcset="">
+
+    <h5> Username: {{  user.username }}</h5>  
+    <h5> EMail: {{ user.email }}</h5>
     {% if user.bio %}
-        <h1> Bio : {{ user.bio }} </h1>
+        <h5> Bio : {{ user.bio }} </h5>
     {% endif %}
     {% if user.address %}
-        <h1> Address : {{ user.address }}</h1>
+        <h5> Address : {{ user.address }}</h5>
     {% endif %}
     {% if user.hobby %}
-        <h1> Hobby :{{ user.hobby }}</h1>
+        <h5> Hobby :{{ user.hobby }}</h5>
     {% endif %}
 </body>
 </html>
