@@ -3,6 +3,8 @@ from flask_restx import Resource, Api
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.models import User, SingleUser, AllUsers, db
 from flask_weasyprint import HTML, render_pdf
+from src.config.error_codes import error
+from src.parsers.all_parsers import signup_parser, login_parser
 
 app = Blueprint('app', __name__)
 api = Api(app)
@@ -14,12 +16,14 @@ class Home(Resource):
 
 @api.route('/signup')
 class Signup(Resource):
+    @api.expect(signup_parser)
     def post(self):
-        username = request.json['username']
-        email = request.json['email']
-        password = request.json['password']
+        args = signup_parser.parse_args()
+        username = args['username']
+        email = args['email']
+        password = args['password']
         hashed_password = generate_password_hash(password)
-        image = request.json['image']
+        image = args['image']
 
         if User.query.filter_by(username=username).count():
             return jsonify({'msg':'User already registered'})
@@ -31,14 +35,21 @@ class Signup(Resource):
                 return SingleUser.jsonify(newUser)
             except Exception as e:
                 print(e)
-                return jsonify({'msg':'Error in creating user'})
+                return {
+                    'status':error['500'],
+                    'msg':'Error in creating user'
+                },500
     def get(self):
         return jsonify({'msg':'Method not allowed'})
+
+
 @api.route('/login')
 class Login(Resource):
+    @api.expect(login_parser)
     def post(self):
-        email = request.form['email']
-        password = request.form['password']
+        args = login_parser.parse_args()
+        email = args['email']
+        password = args['password']
         if User.query.filter_by(email=email).count():
             targetUser = User.query.filter_by(email=email).first()
             if check_password_hash(targetUser.password,password)==True:
@@ -70,7 +81,6 @@ class Update(Resource):
             html = render_template('profile.html',user=TargetUser)
             return render_pdf(HTML(string=html))
     def get(self,id):
-        print('ijiwqjdoiwq')
         TargetUser = User.query.filter_by(id=id).first()
         if TargetUser:
             return make_response(render_template('update.html',user=TargetUser))
