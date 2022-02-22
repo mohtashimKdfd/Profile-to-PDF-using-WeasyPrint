@@ -1,47 +1,20 @@
-from flask import Flask, render_template, jsonify, request, url_for
-from flask_sqlalchemy import SQLAlchemy
-from flask_marshmallow import Marshmallow
+from flask import Flask, Blueprint, request, jsonify, render_template, make_response
+from flask_restx import Resource, Api
 from werkzeug.security import generate_password_hash, check_password_hash
+from src.models import User, SingleUser, AllUsers, db
 from flask_weasyprint import HTML, render_pdf
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
-app.config['SQLALCHEMY_DATABASE_URI'] ='postgresql://mohtashimkamran:kamran@127.0.0.1/test2.db'
+app = Blueprint('app', __name__)
+api = Api(app)
 
-db = SQLAlchemy(app)
-marsh = Marshmallow(app)
+@api.route('/')
+class Home(Resource):
+    def get(self):
+        return 'Flask is up and running'
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String,unique=True)
-    email = db.Column(db.String)
-    password = db.Column(db.String)
-    bio = db.Column(db.String,nullable=True)
-    hobby = db.Column(db.String,nullable=True)
-    address = db.Column(db.String,nullable=True)
-    image = db.Column(db.Text,nullable=True)
-
-    def __init__(self,username,password,email,image):
-        self.username=username
-        self.email=email
-        self.password=password
-        self.image=image
-
-class UserSerializer(marsh.Schema):
-    class Meta:
-        fields = ['username','email','bio','hobby','address']
-
-SingleUser = UserSerializer()
-AllUsers = UserSerializer(many = True)
-
-
-@app.route('/')
-def index():
-    return "Uell0"
-
-@app.route('/signup',methods=['POST'])
-def signup():
-    if request.method=='POST':
+@api.route('/signup')
+class Signup(Resource):
+    def post(self):
         username = request.json['username']
         email = request.json['email']
         password = request.json['password']
@@ -59,10 +32,11 @@ def signup():
             except Exception as e:
                 print(e)
                 return jsonify({'msg':'Error in creating user'})
-
-@app.route('/login',methods=["GET","POST"])
-def login():
-    if request.method == 'POST':
+    def get(self):
+        return jsonify({'msg':'Method not allowed'})
+@api.route('/login')
+class Login(Resource):
+    def post(self):
         email = request.form['email']
         password = request.form['password']
         if User.query.filter_by(email=email).count():
@@ -75,14 +49,17 @@ def login():
                 return jsonify({'msg':'Wrong password'})
         else:
             return jsonify({'msg':'No user found'})
-    else:
-        return render_template('login.html')
+    def get(self):
+        return make_response(render_template('login.html'))
 
-@app.route('/update/<int:id>', methods=['POST','GET'])
-def update(id):
-    TargetUser = User.query.filter_by(id=id).first()
-    if TargetUser:
-        if request.method == 'POST':
+
+@api.route('/update/<id>')
+class Update(Resource):
+    def post(self,id):
+        TargetUser = User.query.filter_by(id=id).first()
+        if not TargetUser:
+            return jsonify({'msg':'No user found'})
+        else:
             bio = request.form['bio']
             address = request.form['address']
             hobby = request.form['hobby']
@@ -92,10 +69,10 @@ def update(id):
             db.session.commit()
             html = render_template('profile.html',user=TargetUser)
             return render_pdf(HTML(string=html))
-        elif request.method == 'GET':
-            return render_template('update.html',user=TargetUser)
-    else: 
-        return jsonify({"status":"No user found"})
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    def get(self,id):
+        print('ijiwqjdoiwq')
+        TargetUser = User.query.filter_by(id=id).first()
+        if TargetUser:
+            return make_response(render_template('update.html',user=TargetUser))
+        else:
+            return jsonify({'msg':'No user found'})
